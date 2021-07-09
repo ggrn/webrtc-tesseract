@@ -20,21 +20,27 @@ const useCvProcess = (createProcess) => {
 const createProcessGrayScaleAndShow = (cv, loaded) => {
   if (loaded) {
     let dst;
+    // let dst2;
+    // const rect = new cv.Rect(337, 120, 696, 576);
     window.PROCESS_DST = dst;
 
     return [
       () => {
         dst = new cv.Mat();
+        // dst2 = new cv.Mat();
       },
       ({ src, canvas }) => {
-        
+        // dst = src.roi(rect);
+        // cv.cvtColor(dst, dst2, cv.COLOR_RGBA2GRAY);
         cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
         cv.imshow(canvas, dst);
 
       },
       () => {
         dst.delete();
+        // dst2.delete();
         dst = null;
+        // dst2 = null;
       }
     ]
   } else {
