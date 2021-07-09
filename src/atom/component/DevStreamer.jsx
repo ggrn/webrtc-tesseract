@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Box, Grid } from '@material-ui/core';
 import useStyle from '../style/useStyle';
 import PropTypes from 'prop-types';
@@ -10,47 +10,20 @@ const { clearCanvas, processFrame: {
 } } = util;
 
 const DevStreamer = (props) => {
-  const { stream } = props;
+  const { stream, setStream } = props;
   const classes = useStyle();
 
   const {
     preProcess,
-    process: processGrayScaleAndShow, 
-    clearProcess, 
-    cv 
+    process: processGrayScaleAndShow,
+    clearProcess,
+    cv
   } = useCvProcess(createProcessGrayScaleAndShow);
 
   const videoRef = useRef(HTMLVideoElement.prototype);
   const canvasRef = useRef(HTMLCanvasElement.prototype);
-
-  const [start, setStart] = useState(false);
-
   const srcRef = useRef(null);
   const captureRef = useRef();
-
-  useEffect(() => {
-    if (stream && stream instanceof MediaStream && stream.active) {
-      const videoEl = videoRef.current;
-      const { width, height } = stream.getVideoTracks()[0].getSettings();
-      videoEl.width = width;
-      videoEl.height = height;
-      videoEl.srcObject = stream;
-
-      (async () => { await videoEl.play() })();
-
-      // videoEl.play();
-
-      setStart(true);
-
-      return () => {
-        videoEl.srcObject.getTracks().forEach(track => track.stop());
-        videoEl.srcObject = null;
-        videoEl.removeAttribute('width');
-        videoEl.removeAttribute('height');
-        setStart(false);
-      }
-    }
-  }, [stream]);
 
   const clearEnv = useCallback(() => {
     if(srcRef.current) {
@@ -58,7 +31,7 @@ const DevStreamer = (props) => {
       srcRef.current = null;
     }
     if(timerRef.current) {
-      clearTimeout(timerRef.current);
+      cancelAnimationFrame(timerRef.current);
       timerRef.current = null;
     }
     clearCanvas(canvasRef.current);
@@ -67,9 +40,9 @@ const DevStreamer = (props) => {
 
   const timerRef = useRef();
   const frameRateRef = useRef(30);
+
   const processFrame = useCallback(() => {
     try {
-      const begin = Date.now();
       captureRef.current.read(srcRef.current);
 
       processGrayScaleAndShow({
@@ -77,38 +50,61 @@ const DevStreamer = (props) => {
         canvas: canvasRef.current
       })
       
-      const delay = 1000/frameRateRef - (Date.now() - begin);
-      timerRef.current = setTimeout(processFrame, delay);
-
+      timerRef.current = requestAnimationFrame(processFrame);
     } catch (error) {
       console.error(error);
-      setStart(false);
     }
-  }, [processGrayScaleAndShow])
+  }, [processGrayScaleAndShow]);
+
+  const start = useCallback(() => {
+    console.debug(new Date(), 'start');
+
+    const stream = videoRef.current.srcObject;
+    const { frameRate } = stream.getVideoTracks()[0].getSettings();
+    frameRateRef.current =frameRate ;
+    srcRef.current = new cv.Mat(videoRef.current.height, videoRef.current.width, cv.CV_8UC4);
+    captureRef.current = new cv.VideoCapture(videoRef.current);
+    
+    preProcess();
+
+    timerRef.current = requestAnimationFrame(processFrame);
+    // timerRef.current = setTimeout(processFrame, 0);
+  }, [preProcess, processFrame, cv])
 
   useEffect(() => {
-    if (cv && start) {
-      console.debug(new Date(), 'start')
+    if (stream && stream instanceof MediaStream && stream.active) {
+      const videoEl = videoRef.current;
+      const track = stream.getVideoTracks()[0];
 
-      if(videoRef.current) {
-        const stream = videoRef.current.srcObject;
-        const { width, height, frameRate } = stream.getVideoTracks()[0].getSettings();
-        srcRef.current = new cv.Mat(height, width, cv.CV_8UC4);
-        frameRateRef.current = frameRate;
-        captureRef.current = new cv.VideoCapture(videoRef.current);
-        // console.log(Date.now(), srcRef.current);
-        
-        preProcess();
-
-        timerRef.current = setTimeout(processFrame, 0);
+      const handleTrackEnded = () => {
+        console.debug(new Date(), 'track ended by user');
+        setStream(null);
       }
 
+      track.addEventListener('ended', handleTrackEnded);
+
+      const { width, height } = track.getSettings();
+      videoEl.width = width;
+      videoEl.height = height;
+      videoEl.srcObject = stream.clone();
+
+      (async () => { 
+        await videoEl.play();
+        console.log('hi')
+        start();
+      })();
+
       return () => {
-        console.debug('clean dev streamer');
+        console.debug(new Date(), 'remove stream')
+        track.removeEventListener('ended', handleTrackEnded);
+        videoEl.srcObject.getVideoTracks().forEach(track => track.stop());
+        videoEl.srcObject = null;
+        videoEl.removeAttribute('width');
+        videoEl.removeAttribute('height');
         clearEnv();
       }
     }
-  }, [start, cv, preProcess, processFrame, clearEnv]);
+  }, [stream, setStream, start, clearEnv]);
 
   return (
     <>
