@@ -13,7 +13,12 @@ const DevStreamer = (props) => {
   const { stream } = props;
   const classes = useStyle();
 
-  const { process: processGrayScaleAndShow, clearProcess, cv } = useCvProcess(createProcessGrayScaleAndShow);
+  const {
+    preProcess,
+    process: processGrayScaleAndShow, 
+    clearProcess, 
+    cv 
+  } = useCvProcess(createProcessGrayScaleAndShow);
 
   const videoRef = useRef(HTMLVideoElement.prototype);
   const canvasRef = useRef(HTMLCanvasElement.prototype);
@@ -29,13 +34,15 @@ const DevStreamer = (props) => {
       const { width, height } = stream.getVideoTracks()[0].getSettings();
       videoEl.width = width;
       videoEl.height = height;
-      videoEl.srcObject = stream.clone();
-      videoEl.play();
+      videoEl.srcObject = stream;
+
+      (async () => { await videoEl.play() })();
+
+      // videoEl.play();
 
       setStart(true);
 
       return () => {
-        console.debug('clean dev streamer');
         videoEl.srcObject.getTracks().forEach(track => track.stop());
         videoEl.srcObject = null;
         videoEl.removeAttribute('width');
@@ -64,7 +71,7 @@ const DevStreamer = (props) => {
     try {
       const begin = Date.now();
       captureRef.current.read(srcRef.current);
-      
+
       processGrayScaleAndShow({
         src: srcRef.current,
         canvas: canvasRef.current
@@ -74,28 +81,34 @@ const DevStreamer = (props) => {
       timerRef.current = setTimeout(processFrame, delay);
 
     } catch (error) {
+      console.error(error);
       setStart(false);
     }
   }, [processGrayScaleAndShow])
 
   useEffect(() => {
-    if (cv && stream && start) {
-      console.info(new Date(), 'start')
+    if (cv && start) {
+      console.debug(new Date(), 'start')
 
       if(videoRef.current) {
+        const stream = videoRef.current.srcObject;
         const { width, height, frameRate } = stream.getVideoTracks()[0].getSettings();
         srcRef.current = new cv.Mat(height, width, cv.CV_8UC4);
         frameRateRef.current = frameRate;
         captureRef.current = new cv.VideoCapture(videoRef.current);
         // console.log(Date.now(), srcRef.current);
+        
+        preProcess();
+
         timerRef.current = setTimeout(processFrame, 0);
       }
 
       return () => {
+        console.debug('clean dev streamer');
         clearEnv();
       }
     }
-  }, [stream, start, cv, processFrame, clearEnv]);
+  }, [start, cv, preProcess, processFrame, clearEnv]);
 
   return (
     <>

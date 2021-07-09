@@ -1,11 +1,12 @@
 import { red } from '@material-ui/core/colors';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles } from '@material-ui/styles';
 
 const useStyle = makeStyles(theme => ({
   root: {
     flexGrow: 1,
     paddingTop: 96,
-    maxHeight: "100vh",
+    minHeight: "100vh",
+    position: 'relative',
   },
   devStreamer: {
     // width: "100%",
@@ -30,6 +31,15 @@ const useStyle = makeStyles(theme => ({
   },
   title: {
     flexGrow: 1,
+  },
+  fab: {
+    position: 'absolute!important',
+    bottom: theme.spacing(2),
+    right: theme.spacing(2),
+    margin: theme.spacing(1),
+  },
+  extendedIcon: {
+    marginRight: theme.spacing(1),
   },
 }))
 

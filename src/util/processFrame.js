@@ -8,25 +8,33 @@ import { useMemo } from "react";
 
 const useCvProcess = (createProcess) => {
   const { cv, loaded } = useOpenCv();
-  const [process, clearProcess] = useMemo(() => createProcess(cv, loaded), [cv, loaded, createProcess]);
+  const [
+    preProcess,
+    process, 
+    clearProcess
+  ] = useMemo(() => createProcess(cv, loaded), [cv, loaded, createProcess]);
 
-  return { process, clearProcess, cv, loaded };
+  return { preProcess, process, clearProcess, cv, loaded };
 }
 
 const createProcessGrayScaleAndShow = (cv, loaded) => {
   if (loaded) {
-    const dst = new cv.Mat();
+    let dst;
     window.PROCESS_DST = dst;
 
     return [
+      () => {
+        dst = new cv.Mat();
+      },
       ({ src, canvas }) => {
-
+        
         cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
         cv.imshow(canvas, dst);
 
       },
       () => {
         dst.delete();
+        dst = null;
       }
     ]
   } else {
