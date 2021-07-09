@@ -3,6 +3,7 @@ import { Box, Grid } from '@material-ui/core';
 import useStyle from '../style/useStyle';
 import PropTypes from 'prop-types';
 import util from '../../util'
+import MouseTracker from './MouseTracker';
 
 const { clearCanvas, processFrame: { 
   useCvProcess,
@@ -111,11 +112,13 @@ const DevStreamer = (props) => {
       {
         // process.env.NODE_ENV === 'deveolpment' && 
         (
-          <Grid container justifyContent={'center'} item xs={12}>
-            <Box className={classes.devStreamer} clone>
-              <video ref={videoRef}></video>
-            </Box>
-          </Grid>
+          <MouseTracker>
+            <Grid container justifyContent={'center'} item xs={12}>
+              <Box className={classes.devStreamer} clone>
+                <video ref={videoRef}></video>
+              </Box>
+            </Grid>
+          </MouseTracker>
         )
       }
       <Grid container justifyContent={'center'} item xs={12}>
