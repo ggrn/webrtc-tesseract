@@ -9,11 +9,7 @@ const useStyle = makeStyles(theme => ({
     position: 'relative',
   },
   devStreamer: {
-    // width: "100%",
-    // height: 800,
     backgroundColor: red[100],
-    // marginBottom: 30,
-    // objectFit: "contain",
   },
   cannotUseModal: {
     display: 'flex',
@@ -33,7 +29,7 @@ const useStyle = makeStyles(theme => ({
     flexGrow: 1,
   },
   fab: {
-    position: 'absolute!important',
+    position: 'fixed!important',
     bottom: theme.spacing(2),
     right: theme.spacing(2),
     margin: theme.spacing(1),
