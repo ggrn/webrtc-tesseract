@@ -20,14 +20,8 @@ function App() {
         <CssBaseline />
         <TopBar />
         <Container maxWidth="xl">
-          <Grid container className={classes.root} item xs={12} spacing={1}>
-            {
-              process.env.NODE_ENV === 'development' && (
-                <DevStreamer stream={stream} />
-                // <Grid contiitem xs={12}>
-                // </Grid>
-              )
-            }
+          <Grid container className={classes.root} justifyContent="center" item xs={12} spacing={1}>
+            <DevStreamer stream={stream} />
             <Grid container justifyContent="center" item xs={12}>
               <MediaSelector stream={stream} setStream={setStream} />
             </Grid>

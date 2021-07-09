@@ -4,14 +4,15 @@ import { makeStyles } from '@material-ui/core/styles';
 const useStyle = makeStyles(theme => ({
   root: {
     flexGrow: 1,
-    paddingTop: 48
+    paddingTop: 96,
+    maxHeight: "100vh",
   },
   devStreamer: {
-    width: "100%",
+    // width: "100%",
     // height: 800,
     backgroundColor: red[100],
     // marginBottom: 30,
-    objectFit: "contain",
+    // objectFit: "contain",
   },
   cannotUseModal: {
     display: 'flex',
