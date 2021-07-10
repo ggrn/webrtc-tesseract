@@ -7,7 +7,7 @@ const CannotUseModal = ({ open, handleOpen }) => {
   const classes = useStyle();
 
   return (
-    <Modal 
+    <Modal
       aria-labelledby="cannot-use-modal"
       aria-describedby="cannot-use-this-site-without-chrome"
       className={classes.cannotUseModal}
@@ -17,8 +17,7 @@ const CannotUseModal = ({ open, handleOpen }) => {
       BackdropComponent={Backdrop}
       BackdropProps={{
         timeout: 500,
-      }}
-    >
+      }}>
       <Fade in={open}>
         <div className={classes.paper}>
           <h2 id="transition-modal-title">사용 불가</h2>
@@ -26,17 +25,16 @@ const CannotUseModal = ({ open, handleOpen }) => {
         </div>
       </Fade>
     </Modal>
-  )
-}
-
+  );
+};
 
 CannotUseModal.defaultProps = {
   open: false,
-}
+};
 
 CannotUseModal.propTypes = {
   open: PropTypes.bool.isRequired,
   handleOpen: PropTypes.func.isRequired,
-}
+};
 
 export default CannotUseModal;

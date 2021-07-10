@@ -1,7 +1,7 @@
-import CannotUseModal from "./CannotUseModal";
+import CannotUseModal from './CannotUseModal';
 
 const modal = {
-  CannotUseModal
+  CannotUseModal,
 };
 
 export default modal;

@@ -5,9 +5,9 @@ import useStyle from '../style/useStyle';
 
 const TopBar = () => {
   const classes = useStyle();
-  
+
   return (
-    <AppBar position="static">
+    <AppBar position="fixed">
       <Toolbar>
         <IconButton edge="start" className={classes.menuButton} color="inherit" aria-label="menu">
           <MenuIcon />
@@ -17,7 +17,7 @@ const TopBar = () => {
         </Typography>
       </Toolbar>
     </AppBar>
-  )
-}
+  );
+};
 
 export default TopBar;

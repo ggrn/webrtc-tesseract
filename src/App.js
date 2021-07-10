@@ -1,38 +1,44 @@
-import React, { useState } from "react";
+import React, { useMemo } from 'react';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import Container from '@material-ui/core/Container';
-import Grid from '@material-ui/core/Grid';
-import atom from "./atom";
-import { OpenCvProvider } from 'opencv-react'
+import { OpenCvProvider } from 'opencv-react';
+import { createTheme, ThemeProvider } from '@material-ui/core/styles';
+import Main from './page/Main';
+import TopBar from './atom/component/TopBar';
+import { TesseractProvider } from './util/TerreractProvider';
+import { PSM } from 'tesseract.js';
 
-const { 
-  component: { DevStreamer, MediaSelector, TopBar }, 
-  useStyle 
-} = atom;
+const theme = createTheme();
 
 function App() {
-  const classes = useStyle();
-  const [stream, setStream] = useState();
+  const tesseractWorkerCreateOption = useMemo(
+    () => ({
+      logger: (m) => {
+        // console.log(m)
+      },
+    }),
+    []
+  );
+  const tesseractWorkerParameter = useMemo(
+    () => ({
+      tessedit_pageseg_mode: PSM.AUTO,
+      user_defined_dpi: '70',
+      tessedit_create_box: '1',
+      tessedit_create_unlv: '1',
+      tessedit_create_osd: '1',
+    }),
+    []
+  );
 
   return (
     <>
-      <OpenCvProvider openCvPath='/lib/opencv.js'>
-        <CssBaseline />
-        <TopBar />
-        <Container maxWidth="xl">
-          <Grid container className={classes.root} item xs={12} spacing={1}>
-            {
-              process.env.NODE_ENV === 'development' && (
-                <DevStreamer stream={stream} />
-                // <Grid contiitem xs={12}>
-                // </Grid>
-              )
-            }
-            <Grid container justifyContent="center" item xs={12}>
-              <MediaSelector stream={stream} setStream={setStream} />
-            </Grid>
-          </Grid>
-        </Container>
+      <OpenCvProvider openCvPath="/webrtc-tesseract/lib/opencv.js">
+        <TesseractProvider workerCreateOption={tesseractWorkerCreateOption} workerParameter={tesseractWorkerParameter}>
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <TopBar />
+            <Main />
+          </ThemeProvider>
+        </TesseractProvider>
       </OpenCvProvider>
     </>
   );

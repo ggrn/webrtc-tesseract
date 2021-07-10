@@ -1,101 +1,189 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Box, Grid } from '@material-ui/core';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Box, Grid, Paper, TableContainer, Table, TableHead, TableCell, TableBody, TablePagination } from '@material-ui/core';
 import useStyle from '../style/useStyle';
 import PropTypes from 'prop-types';
-import { useOpenCv } from 'opencv-react';
+import util from '../../util';
+import MouseTracker from './MouseTracker';
+import { TableRow } from '@material-ui/core';
+import { useTesseractLogger } from '../../util/TesseractLogger';
+
+const {
+  clearCanvas,
+  processFrame: { useCvProcess, createProcessGrayScaleAndShow },
+} = util;
 
 const DevStreamer = (props) => {
-  const { stream } = props;
+  const { stream, setStream } = props;
   const classes = useStyle();
+  const rows = useTesseractLogger();
 
-  const { cv } = useOpenCv();
+  const { preProcess, process: processGrayScaleAndShow, clearProcess, cv } = useCvProcess(createProcessGrayScaleAndShow);
 
   const videoRef = useRef(HTMLVideoElement.prototype);
   const canvasRef = useRef(HTMLCanvasElement.prototype);
-
-  const [start, setStart] = useState(false);
-
-  const srcRef = useRef();
-  const dstRef = useRef();
+  const srcRef = useRef(null);
   const captureRef = useRef();
+
+  const clearEnv = useCallback(() => {
+    if (srcRef.current) {
+      srcRef.current.delete();
+      srcRef.current = null;
+    }
+    if (timerRef.current) {
+      cancelAnimationFrame(timerRef.current);
+      timerRef.current = null;
+    }
+    clearCanvas(canvasRef.current);
+    clearProcess();
+  }, [clearProcess]);
+
+  const timerRef = useRef();
+  const frameRateRef = useRef(30);
+
+  const processFrame = useCallback(() => {
+    try {
+      captureRef.current.read(srcRef.current);
+
+      processGrayScaleAndShow({
+        src: srcRef.current,
+        canvas: canvasRef.current,
+      });
+
+      timerRef.current = requestAnimationFrame(processFrame);
+    } catch (error) {
+      console.error(error);
+    }
+  }, [processGrayScaleAndShow]);
+
+  const start = useCallback(() => {
+    console.debug(new Date(), 'start');
+
+    const { srcObject: stream, videoHeight: height, videoWidth: width } = videoRef.current;
+    const { frameRate } = stream.getVideoTracks()[0].getSettings();
+    frameRateRef.current = frameRate;
+    srcRef.current = new cv.Mat(height, width, cv.CV_8UC4);
+    captureRef.current = new cv.VideoCapture(videoRef.current);
+
+    preProcess();
+
+    timerRef.current = requestAnimationFrame(processFrame);
+  }, [preProcess, processFrame, cv]);
 
   useEffect(() => {
     if (stream && stream instanceof MediaStream && stream.active) {
       const videoEl = videoRef.current;
-      const { width, height } = stream.getVideoTracks()[0].getSettings();
-      videoEl.width = width;
-      videoEl.height = height;
       videoEl.srcObject = stream.clone();
-      videoEl.play();
 
-      setStart(true);
+      const track = stream.getVideoTracks()[0];
+
+      const handleTrackEnded = () => {
+        console.debug(new Date(), 'track ended by user');
+        setStream(null);
+      };
+      track.addEventListener('ended', handleTrackEnded);
+
+      (async () => {
+        await videoEl.play();
+        const { videoHeight: height, videoWidth: width } = videoRef.current;
+        videoRef.current.width = width;
+        videoRef.current.height = height;
+        console.log('hi', height, width, videoRef.current.videoHeight, videoRef.current.videoWidth);
+        start();
+      })();
 
       return () => {
-        console.debug('clean dev streamer');
-        videoEl.srcObject.getTracks().forEach(track => track.stop());
+        console.debug(new Date(), 'remove stream');
+        track.removeEventListener('ended', handleTrackEnded);
+        videoEl.srcObject.getVideoTracks().forEach((track) => track.stop());
         videoEl.srcObject = null;
-        setStart(false);
-      }
+        videoEl.removeAttribute('width');
+        videoEl.removeAttribute('height');
+        clearEnv();
+      };
     }
-  }, [stream]);
+  }, [stream, setStream, start, clearEnv]);
 
-  const frameRateRef = useRef(30);
-  const process = useCallback(() => {
-    try {
-      const begin = Date.now();
-      captureRef.current.read(srcRef.current);
-      cv.cvtColor(srcRef.current, dstRef.current, cv.COLOR_RGBA2GRAY);
-      cv.imshow(canvasRef.current, dstRef.current);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const columns = useMemo(
+    () => [
+      { id: 'jobId', label: 'job ID' },
+      { id: 'text', label: 'text' },
+    ],
+    []
+  );
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
 
-      const delay = 1000/frameRateRef - (Date.now() - begin);
-      setTimeout(process, delay);
-    } catch (error) {
-      console.error(error);
-    }
-  }, [cv])
-
-  useEffect(() => {
-    if (cv && stream && start) {
-
-      if(videoRef.current) {
-        const { width, height, frameRate } = stream.getVideoTracks()[0].getSettings();
-        srcRef.current = new cv.Mat(height, width, cv.CV_8UC4);
-        dstRef.current = new cv.Mat(height, width, cv.CV_8UC1);
-        frameRateRef.current = frameRate;
-        captureRef.current = new cv.VideoCapture(videoRef.current);
-        console.log(srcRef.current);
-        setTimeout(process, 0);
-      }
-
-      return () => {
-        if(srcRef.current) {
-          srcRef.current.delete();
-        }
-        if(dstRef.current) {
-          dstRef.current.delete();
-        }
-      }
-    }
-  }, [stream, start, cv, process]);
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(+event.target.value);
+    setPage(0);
+  };
 
   return (
     <>
-      <Grid container item xs={6}>
+      {
+        // process.env.NODE_ENV === 'deveolpment' &&
+        <MouseTracker>
+          <Grid container justifyContent={'center'} item xs={6}>
+            <Box className={classes.devStreamer} clone>
+              <video className={classes.devStreamerMedia} ref={videoRef}></video>
+            </Box>
+          </Grid>
+        </MouseTracker>
+      }
+      <Grid container justifyContent={'center'} item xs={6}>
         <Box className={classes.devStreamer} clone>
-          <video ref={videoRef}></video>
+          <canvas className={classes.devStreamerMedia} ref={canvasRef}></canvas>
         </Box>
       </Grid>
-      <Grid container item xs={6}>
-        <Box className={classes.devStreamer} clone>
-          <canvas ref={canvasRef}></canvas>
-        </Box>
+      <Grid item xs={12}>
+        <Paper>
+          <TableContainer>
+            <Table className={classes.table} size="small">
+              <TableHead>
+                <TableRow>
+                  {columns.map((column) => (
+                    <TableCell key={column.id}>{column.label}</TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
+                  return (
+                    <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
+                      {columns.map((column) => {
+                        const value = row[column.id];
+                        return (
+                          <TableCell key={column.id}>
+                            {value /* {column.format && typeof value === 'number' ? column.format(value) : value} */}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <TablePagination
+            rowsPerPageOptions={[10, 25, 100]}
+            component="div"
+            count={rows.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
+        </Paper>
       </Grid>
     </>
-  )
-}
+  );
+};
 
 DevStreamer.propTypes = {
-  stream: PropTypes.instanceOf(MediaStream)
-}
+  stream: PropTypes.instanceOf(MediaStream),
+};
 
 export default DevStreamer;
