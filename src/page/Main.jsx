@@ -14,7 +14,7 @@ const Main = () => {
 
   return (
     <Container maxWidth="xl" className={classes.root}>
-      <Grid container justifyContent="center" item xs={12} spacing={1}>
+      <Grid container item xs={12} spacing={1}>
         <DevStreamer stream={stream} setStream={setStream}/>
       </Grid>
       <MediaSelector stream={stream} setStream={setStream}/>

@@ -1,5 +1,7 @@
 import { useOpenCv } from "opencv-react";
 import { useMemo } from "react";
+import { useTesseract } from './useTesseract';
+import { actions } from './TesseractLogger';
 
 // const vMatrixVisible = () => {
 //   return true;
@@ -8,16 +10,25 @@ import { useMemo } from "react";
 
 const useCvProcess = (createProcess) => {
   const { cv, loaded } = useOpenCv();
+  const { scheduler } = useTesseract();
   const [
     preProcess,
     process, 
     clearProcess
-  ] = useMemo(() => createProcess(cv, loaded), [cv, loaded, createProcess]);
+  ] = useMemo(() => createProcess(cv, loaded, scheduler), [cv, loaded, createProcess, scheduler]);
 
   return { preProcess, process, clearProcess, cv, loaded };
 }
 
-const createProcessGrayScaleAndShow = (cv, loaded) => {
+
+/**
+ * 
+ * @param {import("opencv-react").cv} cv 
+ * @param {boolean} loaded 
+ * @param {import("tesseract.js").Scheduler} scheduler 
+ * @returns 
+ */
+const createProcessGrayScaleAndShow = (cv, loaded, scheduler) => {
   if (loaded) {
     let dst;
     // let dst2;
@@ -27,6 +38,7 @@ const createProcessGrayScaleAndShow = (cv, loaded) => {
     return [
       () => {
         dst = new cv.Mat();
+        actions.clearLogs();
         // dst2 = new cv.Mat();
       },
       ({ src, canvas }) => {
@@ -34,6 +46,14 @@ const createProcessGrayScaleAndShow = (cv, loaded) => {
         // cv.cvtColor(dst, dst2, cv.COLOR_RGBA2GRAY);
         cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
         cv.imshow(canvas, dst);
+
+        if (scheduler.getQueueLen() < 5) {
+          console.debug(new Date(), 'add job');
+          (async () => {
+            actions.addLog(await scheduler.addJob('recognize', canvas));
+            // console.log(log);
+          })()
+        }
 
       },
       () => {
@@ -50,7 +70,7 @@ const createProcessGrayScaleAndShow = (cv, loaded) => {
 
 const processFrame = {
   useCvProcess,
-  createProcessGrayScaleAndShow
+  createProcessGrayScaleAndShow,
 }
 
 export default processFrame;

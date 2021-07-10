@@ -9,7 +9,13 @@ const useStyle = makeStyles(theme => ({
     position: 'relative',
   },
   devStreamer: {
+    width: "100%",
     backgroundColor: red[100],
+  },
+  devStreamerMedia: {
+    width: "100%",
+    height: "100%",
+    objectFit: 'contain',
   },
   cannotUseModal: {
     display: 'flex',
@@ -36,6 +42,9 @@ const useStyle = makeStyles(theme => ({
   },
   extendedIcon: {
     marginRight: theme.spacing(1),
+  },
+  table: {
+    minWidth: 650,
   },
 }))
 
