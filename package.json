@@ -1,5 +1,5 @@
 {
-  "name": "tesseract-test",
+  "name": "webrtc-tesseract",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -25,6 +25,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "format": "prettier --write 'src/**/*.{js,ts,jsx,tsx}'"
   },
   "eslintConfig": {
@@ -46,6 +48,7 @@
     ]
   },
   "devDependencies": {
+    "gh-pages": "^3.2.3",
     "husky": "^7.0.1",
     "lint-staged": "^11.0.0",
     "prettier": "^2.3.2"
@@ -62,5 +65,6 @@
     "tabWidth": 2,
     "useTabs": false,
     "printWidth": 140
-  }
+  },
+  "homepage": "https://ggrn.github.io/webrtc-tesseract"
 }

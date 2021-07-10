@@ -31,7 +31,7 @@ function App() {
 
   return (
     <>
-      <OpenCvProvider openCvPath="/lib/opencv.js">
+      <OpenCvProvider openCvPath="/webrtc-tesseract/lib/opencv.js">
         <TesseractProvider workerCreateOption={tesseractWorkerCreateOption} workerParameter={tesseractWorkerParameter}>
           <ThemeProvider theme={theme}>
             <CssBaseline />
