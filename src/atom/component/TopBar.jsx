@@ -5,7 +5,7 @@ import useStyle from '../style/useStyle';
 
 const TopBar = () => {
   const classes = useStyle();
-  
+
   return (
     <AppBar position="fixed">
       <Toolbar>
@@ -17,7 +17,7 @@ const TopBar = () => {
         </Typography>
       </Toolbar>
     </AppBar>
-  )
-}
+  );
+};
 
 export default TopBar;

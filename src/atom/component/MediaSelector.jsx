@@ -6,7 +6,6 @@ import CannotUseModal from '../modal/CannotUseModal';
 import PropTypes from 'prop-types';
 import useStyle from '../style/useStyle';
 
-
 const MediaSelector = (props) => {
   const { stream, setStream } = props;
   const classes = useStyle();
@@ -19,102 +18,97 @@ const MediaSelector = (props) => {
 
   const [cannotUseModalOpen, setCannotUseModalOpen] = useState(false);
   const handleCannotUseModalOpen = useCallback(() => {
-    setCannotUseModalOpen(open => !open);
-  }, [])
+    setCannotUseModalOpen((open) => !open);
+  }, []);
 
   useEffect(() => {
-    if(!!!navigator?.mediaDevices?.getDisplayMedia) {
+    if (!!!navigator?.mediaDevices?.getDisplayMedia) {
       setCannotUseModalOpen(true);
     }
   }, []);
 
   useEffect(() => {
-    if(stream) {
+    if (stream) {
       return () => {
-        stream.getTracks().forEach(track => track.stop());
-      }
+        stream.getTracks().forEach((track) => track.stop());
+      };
     }
-  }, [stream])
+  }, [stream]);
 
   const handleCastClick = useCallback(
     /**
-     * @param {import('react').MouseEvent} e 
+     * @param {import('react').MouseEvent} e
      * @returns {Promise<import('react').MouseEventHandler>}
      */
-    async e => {
+    async (e) => {
       try {
         const mediaStream = await navigator.mediaDevices.getDisplayMedia({ audio: false });
         setStream(mediaStream);
       } catch (error) {
-        console.error("Error: " + error);
+        console.error('Error: ' + error);
       }
-    }, [setStream]
+    },
+    [setStream]
   );
 
   const handleCancelClick = useCallback(
     /**
-     * @param {import('react').MouseEvent} e 
+     * @param {import('react').MouseEvent} e
      * @returns {Promise<import('react').MouseEventHandler>}
      */
-    async e => {
+    async (e) => {
       try {
         setStream(null);
       } catch (error) {
-        console.error("Error: " + error);
+        console.error('Error: ' + error);
       }
-    }, [setStream]
+    },
+    [setStream]
   );
 
-  const fabs = useMemo(() => [
-    {
-      color: 'primary',
-      className: classes.fab,
-      icon: <CastIcon className={classes.extendedIcon} />,
-      label: '화면 선택',
-      onClick: handleCastClick
-    },
-    {
-      color: 'secondary',
-      className: classes.fab,
-      icon: <CancelPresentationIcon className={classes.extendedIcon} />,
-      label: '종료',
-      onClick: handleCancelClick
-    }
-  ], [classes.fab, classes.extendedIcon, handleCastClick, handleCancelClick]);
+  const fabs = useMemo(
+    () => [
+      {
+        color: 'primary',
+        className: classes.fab,
+        icon: <CastIcon className={classes.extendedIcon} />,
+        label: '화면 선택',
+        onClick: handleCastClick,
+      },
+      {
+        color: 'secondary',
+        className: classes.fab,
+        icon: <CancelPresentationIcon className={classes.extendedIcon} />,
+        label: '종료',
+        onClick: handleCancelClick,
+      },
+    ],
+    [classes.fab, classes.extendedIcon, handleCastClick, handleCancelClick]
+  );
 
   return (
     <>
-      {
-        fabs.map((fab, index) => (
-            <Zoom
-              key={fab.color}
-              in={index === 0 ? !stream : !!stream}
-              timeout={transitionDuration}
-              style={{
-                transitionDelay: `${(index === 0 ? !stream : !!stream) ? transitionDuration.exit : 0}ms`,
-              }}
-              unmountOnExit
-            >
-              <Fab 
-                variant="extended"
-                aria-label={fab.label}
-                className={fab.className}
-                color={fab.color}
-                onClick={fab.onClick}
-              >
-                {fab.icon}
-                {fab.label}
-              </Fab>
-            </Zoom>
-          )
-        )
-      }
+      {fabs.map((fab, index) => (
+        <Zoom
+          key={fab.color}
+          in={index === 0 ? !stream : !!stream}
+          timeout={transitionDuration}
+          style={{
+            transitionDelay: `${(index === 0 ? !stream : !!stream) ? transitionDuration.exit : 0}ms`,
+          }}
+          unmountOnExit>
+          <Fab variant="extended" aria-label={fab.label} className={fab.className} color={fab.color} onClick={fab.onClick}>
+            {fab.icon}
+            {fab.label}
+          </Fab>
+        </Zoom>
+      ))}
       {/* <Button variant="contained" color={ stream ? "secondary" : "primary" } disableElevation onClick={handleClick}>
         { stream ? "종료" : "화면 선택" }
       </Button> */}
       <CannotUseModal open={cannotUseModalOpen} handleOpen={handleCannotUseModalOpen} />
     </>
-  )
+  );
 };
 
 MediaSelector.propTypes = {

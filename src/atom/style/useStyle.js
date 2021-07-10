@@ -1,26 +1,26 @@
 import { red } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/styles';
 
-const useStyle = makeStyles(theme => ({
+const useStyle = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
     paddingTop: 96,
-    minHeight: "100vh",
+    minHeight: '100vh',
     position: 'relative',
   },
   devStreamer: {
-    width: "100%",
+    width: '100%',
     backgroundColor: red[100],
   },
   devStreamerMedia: {
-    width: "100%",
-    height: "100%",
+    width: '100%',
+    height: '100%',
     objectFit: 'contain',
   },
   cannotUseModal: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   cannotUseModalPaper: {
     backgroundColor: theme.palette.background.paper,
@@ -46,6 +46,6 @@ const useStyle = makeStyles(theme => ({
   table: {
     minWidth: 650,
   },
-}))
+}));
 
 export default useStyle;

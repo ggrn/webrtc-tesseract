@@ -1,5 +1,5 @@
-import { useOpenCv } from "opencv-react";
-import { useMemo } from "react";
+import { useOpenCv } from 'opencv-react';
+import { useMemo } from 'react';
 import { useTesseract } from './useTesseract';
 import { actions } from './TesseractLogger';
 
@@ -7,26 +7,20 @@ import { actions } from './TesseractLogger';
 //   return true;
 // }
 
-
 const useCvProcess = (createProcess) => {
   const { cv, loaded } = useOpenCv();
   const { scheduler } = useTesseract();
-  const [
-    preProcess,
-    process, 
-    clearProcess
-  ] = useMemo(() => createProcess(cv, loaded, scheduler), [cv, loaded, createProcess, scheduler]);
+  const [preProcess, process, clearProcess] = useMemo(() => createProcess(cv, loaded, scheduler), [cv, loaded, createProcess, scheduler]);
 
   return { preProcess, process, clearProcess, cv, loaded };
-}
-
+};
 
 /**
- * 
- * @param {import("opencv-react").cv} cv 
- * @param {boolean} loaded 
- * @param {import("tesseract.js").Scheduler} scheduler 
- * @returns 
+ *
+ * @param {import("opencv-react").cv} cv
+ * @param {boolean} loaded
+ * @param {import("tesseract.js").Scheduler} scheduler
+ * @returns
  */
 const createProcessGrayScaleAndShow = (cv, loaded, scheduler) => {
   if (loaded) {
@@ -52,25 +46,24 @@ const createProcessGrayScaleAndShow = (cv, loaded, scheduler) => {
           (async () => {
             actions.addLog(await scheduler.addJob('recognize', canvas));
             // console.log(log);
-          })()
+          })();
         }
-
       },
       () => {
         dst.delete();
         // dst2.delete();
         dst = null;
         // dst2 = null;
-      }
-    ]
+      },
+    ];
   } else {
-    return [() => {}, () => {}]
+    return [() => {}, () => {}];
   }
-}
+};
 
 const processFrame = {
   useCvProcess,
   createProcessGrayScaleAndShow,
-}
+};
 
 export default processFrame;

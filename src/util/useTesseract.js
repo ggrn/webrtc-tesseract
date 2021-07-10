@@ -1,4 +1,4 @@
 import React from 'react';
-import { TesseractContext } from './TerreractProvider'
+import { TesseractContext } from './TerreractProvider';
 
-export const useTesseract = () => React.useContext(TesseractContext)
+export const useTesseract = () => React.useContext(TesseractContext);

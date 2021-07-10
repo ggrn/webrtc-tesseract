@@ -1,6 +1,6 @@
 import { Tooltip } from '@material-ui/core';
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { proxy, useSnapshot } from 'valtio'
+import { proxy, useSnapshot } from 'valtio';
 import PropTypes from 'prop-types';
 
 const MouseTracker = (props) => {
@@ -8,16 +8,20 @@ const MouseTracker = (props) => {
   const ref = useRef();
   const [point, setPoint] = useState({ x: null, y: null });
 
-  const state = useMemo(() => proxy({
-    x: null,
-    y: null,
-  }), []);
+  const state = useMemo(
+    () =>
+      proxy({
+        x: null,
+        y: null,
+      }),
+    []
+  );
   const snap = useSnapshot(state);
 
   const handleMouseOver = useCallback(
     /**
      * @returns {import('react').MouseEventHandler}
-     * @param {MouseEvent} e 
+     * @param {MouseEvent} e
      */
     (e) => {
       if (!e.ctrlKey) {
@@ -29,8 +33,9 @@ const MouseTracker = (props) => {
           state.y = null;
         }
       }
-    }, [state]
-  )
+    },
+    [state]
+  );
 
   useEffect(() => {
     const el = ref.current;
@@ -43,7 +48,7 @@ const MouseTracker = (props) => {
   const handleMouseClick = useCallback(
     /**
      * @returns {import('react').MouseEventHandler}
-     * @param {MouseEvent} e 
+     * @param {MouseEvent} e
      */
     (e) => {
       const x = e.ctrlKey ? snap.x : e.layerX;
@@ -52,19 +57,24 @@ const MouseTracker = (props) => {
       console.log({ x, y });
       if (e.target instanceof HTMLVideoElement && x >= 0 && y >= 0) {
         if (point.x !== null && point.y !== null) {
-          console.log({ 
-            x1: point.x, y1: point.y,
-            x2: x, y2: y,
-            point1: point, point2: { x, y },
-            width: Math.abs(point.x - x), height: Math.abs(point.y - y)
-          })
+          console.log({
+            x1: point.x,
+            y1: point.y,
+            x2: x,
+            y2: y,
+            point1: point,
+            point2: { x, y },
+            width: Math.abs(point.x - x),
+            height: Math.abs(point.y - y),
+          });
           setPoint({ x: null, y: null });
         } else {
           setPoint({ x, y });
         }
       }
-    }, [snap, point]
-  )
+    },
+    [snap, point]
+  );
   useEffect(() => {
     const el = ref.current;
     el.addEventListener('click', handleMouseClick);
@@ -74,10 +84,10 @@ const MouseTracker = (props) => {
   }, [handleMouseClick]);
 
   const getTitle = useCallback(() => {
-    if(snap.x !== null && snap.y !== null) {
+    if (snap.x !== null && snap.y !== null) {
       return `x:${snap.x}, y:${snap.y}`;
     } else {
-      return ""
+      return '';
     }
   }, [snap]);
 
@@ -85,11 +95,11 @@ const MouseTracker = (props) => {
     <Tooltip followCursor={true} title={getTitle()} ref={ref}>
       {children}
     </Tooltip>
-  )
-}
+  );
+};
 
 MouseTracker.propTypes = {
-  children: PropTypes.element.isRequired
-}
+  children: PropTypes.element.isRequired,
+};
 
 export default MouseTracker;
