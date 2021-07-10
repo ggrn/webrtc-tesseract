@@ -2,27 +2,22 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Box, Grid, Paper, TableContainer, Table, TableHead, TableCell, TableBody, TablePagination } from '@material-ui/core';
 import useStyle from '../style/useStyle';
 import PropTypes from 'prop-types';
-import util from '../../util'
+import util from '../../util';
 import MouseTracker from './MouseTracker';
 import { TableRow } from '@material-ui/core';
-import { useTesseractLogger } from '../../util/TesseractLogger'
+import { useTesseractLogger } from '../../util/TesseractLogger';
 
-const { clearCanvas, processFrame: { 
-  useCvProcess,
-  createProcessGrayScaleAndShow
-} } = util;
+const {
+  clearCanvas,
+  processFrame: { useCvProcess, createProcessGrayScaleAndShow },
+} = util;
 
 const DevStreamer = (props) => {
   const { stream, setStream } = props;
   const classes = useStyle();
   const rows = useTesseractLogger();
 
-  const {
-    preProcess,
-    process: processGrayScaleAndShow,
-    clearProcess,
-    cv
-  } = useCvProcess(createProcessGrayScaleAndShow);
+  const { preProcess, process: processGrayScaleAndShow, clearProcess, cv } = useCvProcess(createProcessGrayScaleAndShow);
 
   const videoRef = useRef(HTMLVideoElement.prototype);
   const canvasRef = useRef(HTMLCanvasElement.prototype);
@@ -30,17 +25,17 @@ const DevStreamer = (props) => {
   const captureRef = useRef();
 
   const clearEnv = useCallback(() => {
-    if(srcRef.current) {
+    if (srcRef.current) {
       srcRef.current.delete();
       srcRef.current = null;
     }
-    if(timerRef.current) {
+    if (timerRef.current) {
       cancelAnimationFrame(timerRef.current);
       timerRef.current = null;
     }
     clearCanvas(canvasRef.current);
     clearProcess();
-  }, [clearProcess])
+  }, [clearProcess]);
 
   const timerRef = useRef();
   const frameRateRef = useRef(30);
@@ -51,9 +46,9 @@ const DevStreamer = (props) => {
 
       processGrayScaleAndShow({
         src: srcRef.current,
-        canvas: canvasRef.current
-      })
-      
+        canvas: canvasRef.current,
+      });
+
       timerRef.current = requestAnimationFrame(processFrame);
     } catch (error) {
       console.error(error);
@@ -65,15 +60,14 @@ const DevStreamer = (props) => {
 
     const { srcObject: stream, videoHeight: height, videoWidth: width } = videoRef.current;
     const { frameRate } = stream.getVideoTracks()[0].getSettings();
-    frameRateRef.current = frameRate ;
+    frameRateRef.current = frameRate;
     srcRef.current = new cv.Mat(height, width, cv.CV_8UC4);
     captureRef.current = new cv.VideoCapture(videoRef.current);
-    
+
     preProcess();
 
     timerRef.current = requestAnimationFrame(processFrame);
-    // timerRef.current = setTimeout(processFrame, 0);
-  }, [preProcess, processFrame, cv])
+  }, [preProcess, processFrame, cv]);
 
   useEffect(() => {
     if (stream && stream instanceof MediaStream && stream.active) {
@@ -85,13 +79,12 @@ const DevStreamer = (props) => {
       const handleTrackEnded = () => {
         console.debug(new Date(), 'track ended by user');
         setStream(null);
-      }
+      };
       track.addEventListener('ended', handleTrackEnded);
 
-      (async () => { 
+      (async () => {
         await videoEl.play();
         const { videoHeight: height, videoWidth: width } = videoRef.current;
-        // const { width, height } = videoEl.srcObject.getVideoTracks()[0].getSettings();
         videoRef.current.width = width;
         videoRef.current.height = height;
         console.log('hi', height, width, videoRef.current.videoHeight, videoRef.current.videoWidth);
@@ -99,23 +92,26 @@ const DevStreamer = (props) => {
       })();
 
       return () => {
-        console.debug(new Date(), 'remove stream')
+        console.debug(new Date(), 'remove stream');
         track.removeEventListener('ended', handleTrackEnded);
-        videoEl.srcObject.getVideoTracks().forEach(track => track.stop());
+        videoEl.srcObject.getVideoTracks().forEach((track) => track.stop());
         videoEl.srcObject = null;
         videoEl.removeAttribute('width');
         videoEl.removeAttribute('height');
         clearEnv();
-      }
+      };
     }
   }, [stream, setStream, start, clearEnv]);
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const columns = useMemo(() => [
-    { id: 'jobId', label: 'job ID' },
-    { id: 'text', label: 'text' }
-  ], [])
+  const columns = useMemo(
+    () => [
+      { id: 'jobId', label: 'job ID' },
+      { id: 'text', label: 'text' },
+    ],
+    []
+  );
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -128,16 +124,14 @@ const DevStreamer = (props) => {
   return (
     <>
       {
-        // process.env.NODE_ENV === 'deveolpment' && 
-        (
-          <MouseTracker>
-            <Grid container justifyContent={'center'} item xs={6}>
-              <Box className={classes.devStreamer} clone>
-                <video className={classes.devStreamerMedia} ref={videoRef}></video>
-              </Box>
-            </Grid>
-          </MouseTracker>
-        )
+        // process.env.NODE_ENV === 'deveolpment' &&
+        <MouseTracker>
+          <Grid container justifyContent={'center'} item xs={6}>
+            <Box className={classes.devStreamer} clone>
+              <video className={classes.devStreamerMedia} ref={videoRef}></video>
+            </Box>
+          </Grid>
+        </MouseTracker>
       }
       <Grid container justifyContent={'center'} item xs={6}>
         <Box className={classes.devStreamer} clone>
@@ -150,36 +144,30 @@ const DevStreamer = (props) => {
             <Table className={classes.table} size="small">
               <TableHead>
                 <TableRow>
-                  {columns.map(column => (
-                    <TableCell
-                      key={column.id}
-                    >
-                      {column.label}
-                    </TableCell>
+                  {columns.map((column) => (
+                    <TableCell key={column.id}>{column.label}</TableCell>
                   ))}
                 </TableRow>
               </TableHead>
               <TableBody>
-                {
-                  rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                    return (
-                      <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
-                        {columns.map((column) => {
-                          const value = row[column.id];
-                          return (
-                            <TableCell key={column.id}>
-                              {value/* {column.format && typeof value === 'number' ? column.format(value) : value} */}
-                            </TableCell>
-                          );
-                        })}
-                      </TableRow>
-                    )
-                  })
-                }
+                {rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
+                  return (
+                    <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
+                      {columns.map((column) => {
+                        const value = row[column.id];
+                        return (
+                          <TableCell key={column.id}>
+                            {value /* {column.format && typeof value === 'number' ? column.format(value) : value} */}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>
-          <TablePagination 
+          <TablePagination
             rowsPerPageOptions={[10, 25, 100]}
             component="div"
             count={rows.length}
@@ -191,11 +179,11 @@ const DevStreamer = (props) => {
         </Paper>
       </Grid>
     </>
-  )
-}
+  );
+};
 
 DevStreamer.propTypes = {
-  stream: PropTypes.instanceOf(MediaStream)
-}
+  stream: PropTypes.instanceOf(MediaStream),
+};
 
 export default DevStreamer;
