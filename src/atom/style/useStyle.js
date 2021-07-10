@@ -5,6 +5,7 @@ const useStyle = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
     paddingTop: 96,
+    paddingBottom: 84,
     minHeight: '100vh',
     position: 'relative',
   },
